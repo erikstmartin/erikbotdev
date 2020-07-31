@@ -1,3 +1,9 @@
+.envrc
+erikbotdev
+media/
+bot.db
+config.json
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
