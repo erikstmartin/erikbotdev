@@ -100,7 +100,7 @@ func StopStream() error {
 	return err
 }
 
-func stopStreamAction(a bot.Action) error {
+func stopStreamAction(a bot.Action, cmd bot.UserCommand) error {
 	return StopStream()
 }
 
@@ -113,7 +113,7 @@ func EnableSourceFilter(sourceName string, filterName string, enabled bool) erro
 	return nil
 }
 
-func enableSourceFilterAction(a bot.Action) error {
+func enableSourceFilterAction(a bot.Action, cmd bot.UserCommand) error {
 	if _, ok := a.Args["source"]; !ok {
 		return fmt.Errorf("Argument 'source' is required.")
 	}
@@ -141,7 +141,7 @@ func ChangeScene(scene string) error {
 	return nil
 }
 
-func changeSceneAction(a bot.Action) error {
+func changeSceneAction(a bot.Action, cmd bot.UserCommand) error {
 	if _, ok := a.Args["scene"]; !ok {
 		return fmt.Errorf("Argument 'scene' is required.")
 	}

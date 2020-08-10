@@ -22,7 +22,7 @@ var runCmd = &cobra.Command{
 		// TODO: Start working on database
 		err := bot.InitDatabase("bot.db", 0600)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("Failed to initialize database: ", err)
 		}
 
 		sig := make(chan os.Signal, 1)

@@ -4,17 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
+	"os"
+
+	"github.com/nicklaw5/helix"
 )
 
-type ActionFunc func(Action) error
+type ActionFunc func(Action, UserCommand) error
+type CommandFunc func(UserCommand) error
+
 type ModuleConfig map[string]string
 type ModuleInitFunc func(config ModuleConfig) error
 
 var modules []Module
 var registeredActions map[string]ActionFunc
+
 var config Config
 var Status status
+var helixClient *helix.Client
 
 type Config struct {
 	TwitchUser string              `json:"twitchUser"`
@@ -37,6 +43,7 @@ type Command struct {
 	Description string   `json:"description"`
 	Enabled     bool     `json:"enabled"`
 	Offline     bool     `json:"offline"`
+	Points      uint64   `json:"points"`
 	Actions     []Action `json:"actions"`
 }
 
@@ -68,7 +75,7 @@ func RegisterModule(m Module) error {
 	return nil
 }
 
-func registerAction(module string, name string, f func(Action) error) error {
+func registerAction(module string, name string, f ActionFunc) error {
 	n := fmt.Sprintf("%s::%s", module, name)
 
 	if registeredActions == nil {
@@ -84,31 +91,21 @@ func registerAction(module string, name string, f func(Action) error) error {
 	return nil
 }
 
-func ExecuteAction(module string, name string, args map[string]string) error {
+func ExecuteAction(module string, name string, args map[string]string, cmd UserCommand) error {
 	action := fmt.Sprintf("%s::%s", module, name)
 	if f, ok := registeredActions[action]; ok {
-		return f(Action{Name: action, Args: args})
+		return f(Action{Name: action, Args: args}, cmd)
 	}
 	return nil
 }
 
 func ExecuteCommand(cmd UserCommand) error {
-	// Is it the help command?
-	if strings.ToLower(cmd.Command) == "help" {
-		// TODO: If any arguments are supplied, return description
-		cmds := make([]string, 0)
-		for _, c := range config.Commands {
-			if c.Enabled {
-				cmds = append(cmds, c.Name)
-			}
-		}
-		args := map[string]string{
-			"channel": "erikdotdev",
-			"message": strings.Join(cmds, ","),
-		}
-		return ExecuteAction("Twitch", "Say", args)
+	// First look in builtin commands
+	if c, ok := builtinCommands[cmd.Command]; ok {
+		return c(cmd)
 	}
 
+	// Next check user created commands
 	if c, ok := config.Commands[cmd.Command]; ok && c.Enabled {
 		if !Status.Streaming && !c.Offline {
 			return nil
@@ -123,11 +120,17 @@ func ExecuteCommand(cmd UserCommand) error {
 					}
 				}
 
-				if err := f(a); err != nil {
+				if err := f(a, cmd); err != nil {
 					return err
 				}
 			}
 		}
+
+		u, err := GetUser(cmd.UserID)
+		if err == nil && !u.New {
+			u.TakePoints(c.Points)
+		}
+
 		return nil
 	}
 
@@ -157,5 +160,21 @@ func Init() error {
 			}
 		}
 	}
+	var err error
+	helixClient, err = helix.NewClient(&helix.Options{
+		ClientID:        os.Getenv("TWITCH_CLIENT_ID"),
+		ClientSecret:    os.Getenv("TWITCH_CLIENT_SECRET"),
+		UserAccessToken: os.Getenv("TWITCH_OAUTH_TOKEN"),
+	})
+	if err != nil {
+		return err
+	}
+
+	// TODO: Better error handling to ensure valid token
+	token, err := helixClient.GetAppAccessToken()
+	if err != nil {
+		return err
+	}
+	helixClient.SetUserAccessToken(token.Data.AccessToken)
 	return nil
 }

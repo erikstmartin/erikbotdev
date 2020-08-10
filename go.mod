@@ -9,5 +9,6 @@ require (
 	github.com/gempir/go-twitch-irc/v2 v2.4.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/nicklaw5/helix v0.6.0
 	github.com/spf13/cobra v1.0.0
 )
