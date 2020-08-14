@@ -12,8 +12,7 @@ import (
 type ActionFunc func(Action, UserCommand) error
 type CommandFunc func(UserCommand) error
 
-type ModuleConfig map[string]string
-type ModuleInitFunc func(config ModuleConfig) error
+type ModuleInitFunc func(config json.RawMessage) error
 
 var modules []Module
 var registeredActions map[string]ActionFunc
@@ -23,8 +22,26 @@ var Status status
 var helixClient *helix.Client
 
 type Config struct {
-	TwitchUser string              `json:"twitchUser"`
-	Commands   map[string]*Command `json:"commands"`
+	Commands       map[string]*Command        `json:"commands"`
+	EnabledModules []string                   `json:"enabledModules`
+	DatabasePath   string                     `json:"databasePath"`
+	ModuleConfig   map[string]json.RawMessage `json:"moduleConfig"`
+}
+
+func DatabasePath() string {
+	if config.DatabasePath != "" {
+		return config.DatabasePath
+	}
+
+	return "bot.db"
+}
+func IsModuleEnabled(m string) bool {
+	for _, mod := range config.EnabledModules {
+		if mod == m {
+			return true
+		}
+	}
+	return false
 }
 
 type status struct {
@@ -154,17 +171,16 @@ func LoadConfig(r io.Reader) error {
 func Init() error {
 	for _, m := range modules {
 		// TODO: Pass in any config info from config.json
-		if m.Init != nil {
-			if err := m.Init(nil); err != nil {
+		if IsModuleEnabled(m.Name) && m.Init != nil {
+			if err := m.Init(config.ModuleConfig[m.Name]); err != nil {
 				return err
 			}
 		}
 	}
 	var err error
 	helixClient, err = helix.NewClient(&helix.Options{
-		ClientID:        os.Getenv("TWITCH_CLIENT_ID"),
-		ClientSecret:    os.Getenv("TWITCH_CLIENT_SECRET"),
-		UserAccessToken: os.Getenv("TWITCH_OAUTH_TOKEN"),
+		ClientID:     os.Getenv("TWITCH_CLIENT_ID"),
+		ClientSecret: os.Getenv("TWITCH_CLIENT_SECRET"),
 	})
 	if err != nil {
 		return err
@@ -175,6 +191,7 @@ func Init() error {
 	if err != nil {
 		return err
 	}
+
 	helixClient.SetUserAccessToken(token.Data.AccessToken)
 	return nil
 }

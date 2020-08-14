@@ -2,9 +2,11 @@ package hue
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/amimof/huego"
 	"github.com/erikstmartin/erikbotdev/bot"
@@ -19,19 +21,36 @@ var colorMap = map[string]uint16{
 	"pink":   60000,
 }
 
+type Config struct {
+	User   string `json:"user"`
+	Bridge string `json:"bridge"`
+}
+
+func (c *Config) GetUser() string {
+	if strings.HasPrefix(c.User, "$") {
+		return os.Getenv(strings.TrimPrefix(c.User, "$"))
+	}
+	return c.User
+}
+
+var config Config
 var bridge *huego.Bridge
 
 func init() {
 	bot.RegisterModule(bot.Module{
-		Name: "Hue",
+		Name: "hue",
 		Actions: map[string]bot.ActionFunc{
 			"RoomHue":        roomHueAction,
 			"RoomAlert":      roomAlertAction,
 			"ZoneBrightness": zoneBrightnessAction,
 			"RoomBrightness": roomBrightnessAction,
 		},
-		Init: func(c bot.ModuleConfig) error {
-			var err error
+		Init: func(c json.RawMessage) error {
+			err := json.Unmarshal(c, &config)
+			if err != nil {
+				return err
+			}
+
 			bridge, err = getBridge()
 			return err
 		},
@@ -45,8 +64,8 @@ func getBridge() (*huego.Bridge, error) {
 		return bridge, nil
 	}
 
-	if h := os.Getenv("HUE_BRIDGE"); h != "" {
-		return huego.New(h, os.Getenv("HUE_USER")), nil
+	if config.Bridge != "" {
+		return huego.New(config.Bridge, config.GetUser()), nil
 	}
 
 	bridges, err := huego.DiscoverAll()
@@ -62,7 +81,7 @@ func getBridge() (*huego.Bridge, error) {
 		return nil, fmt.Errorf("No Hue bridges found")
 	}
 
-	bridge = bridges[0].Login(os.Getenv("HUE_USER"))
+	bridge = bridges[0].Login(config.GetUser())
 	return bridge, nil
 }
 

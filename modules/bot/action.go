@@ -76,12 +76,7 @@ func shellExecAction(a bot.Action, cmd bot.UserCommand) error {
 	}
 
 	if output, ok := a.Args["output"]; ok && strings.ToLower(output) == "true" {
-		args := map[string]string{
-			"channel": cmd.Channel,
-			"message": string(out),
-		}
-
-		return bot.ExecuteAction("Twitch", "Say", args, cmd)
+		return bot.TwitchSay(cmd, string(out))
 	}
 	return nil
 }

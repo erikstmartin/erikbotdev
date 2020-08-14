@@ -15,33 +15,38 @@ var builtinCommands map[string]CommandFunc = map[string]CommandFunc{
 	"sounds": soundListCmd,
 }
 
+func TwitchSay(cmd UserCommand, msg string) error {
+	args := map[string]string{
+		"channel": cmd.Channel,
+		"message": msg,
+	}
+	return ExecuteAction("twitch", "Say", args, cmd)
+}
+
 func helpCmd(cmd UserCommand) error {
 	// TODO: If any arguments are supplied, return description
+	if len(cmd.Args) > 0 {
+		cname := cmd.Args[0]
+		return TwitchSay(cmd, fmt.Sprintf("%s: %s", cname, config.Commands[cname].Description))
+	}
+
 	cmds := make([]string, 0)
 	for _, c := range config.Commands {
 		if c.Enabled {
 			cmds = append(cmds, c.Name)
 		}
 	}
-	args := map[string]string{
-		"channel": cmd.Channel,
-		"message": strings.Join(cmds, ", "),
-	}
-	return ExecuteAction("Twitch", "Say", args, cmd)
+
+	return TwitchSay(cmd, strings.Join(cmds, ", "))
 }
 
 func userInfoCmd(cmd UserCommand) error {
-	// TODO: Pull this out into bot actions that are automatically registered?
 	u, err := GetUser(cmd.UserID)
 	if err != nil {
 		return err
 	}
 
-	args := map[string]string{
-		"channel": cmd.Channel,
-		"message": fmt.Sprintf("%s: %d points", u.DisplayName, u.Points),
-	}
-	return ExecuteAction("Twitch", "Say", args, cmd)
+	return TwitchSay(cmd, fmt.Sprintf("%s: %d points", u.DisplayName, u.Points))
 }
 
 func givePointsCmd(cmd UserCommand) error {
@@ -59,7 +64,8 @@ func givePointsCmd(cmd UserCommand) error {
 		return err
 	}
 
-	twitchUser, err := GetTwitchUserByName(cmd.Args[0])
+	recipient := strings.TrimPrefix(cmd.Args[0], "@")
+	twitchUser, err := GetTwitchUserByName(recipient)
 	if err != nil {
 		return nil
 	}
@@ -93,9 +99,5 @@ func soundListCmd(cmd UserCommand) error {
 		}
 	}
 
-	args := map[string]string{
-		"channel": cmd.Channel,
-		"message": strings.Join(sounds, ", "),
-	}
-	return ExecuteAction("Twitch", "Say", args, cmd)
+	return TwitchSay(cmd, strings.Join(sounds, ", "))
 }

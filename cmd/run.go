@@ -20,8 +20,11 @@ var runCmd = &cobra.Command{
 		go http.Start(":8080", "./web")
 
 		// TODO: Start working on database
-		err := bot.InitDatabase("bot.db", 0600)
+		err := bot.InitDatabase(bot.DatabasePath(), 0600)
 		if err != nil {
+			if err.Error() == "timeout" {
+				log.Fatal("Timeout opening database. Check to ensure another process does not have the database file open")
+			}
 			log.Fatal("Failed to initialize database: ", err)
 		}
 
@@ -30,10 +33,12 @@ var runCmd = &cobra.Command{
 		go func() {
 			<-sig
 
-			obs.EnableSourceFilter("Heil PR40", "Deep", false)
-			obs.EnableSourceFilter("Heil PR40", "HighPitch", false)
-			obs.EnableSourceFilter("Heil PR40", "False", false)
-			obs.Disconnect()
+			if bot.IsModuleEnabled("OBS") {
+				obs.EnableSourceFilter("Heil PR40", "Deep", false)
+				obs.EnableSourceFilter("Heil PR40", "HighPitch", false)
+				obs.EnableSourceFilter("Heil PR40", "False", false)
+				obs.Disconnect()
+			}
 			os.Exit(0)
 		}()
 		if err := twitch.Run(); err != nil {

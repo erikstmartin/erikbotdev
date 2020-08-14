@@ -4,15 +4,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/boltdb/bolt"
+	"go.etcd.io/bbolt"
 )
 
-var db *bolt.DB
+var db *bbolt.DB
 var USER_BUCKET = []byte("Users")
 
 func InitDatabase(file string, mode os.FileMode) error {
 	var err error
-	db, err = bolt.Open(file, mode, &bolt.Options{Timeout: 1 * time.Second})
+	db, err = bbolt.Open(file, mode, &bbolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return err
 	}

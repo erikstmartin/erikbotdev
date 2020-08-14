@@ -1,8 +1,8 @@
 package obs
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -11,21 +11,31 @@ import (
 	"github.com/erikstmartin/erikbotdev/bot"
 )
 
+type Config struct {
+	Host string `json:"host"`
+	Port string `json:"port"`
+}
+
+var config Config
+
 func init() {
 	bot.RegisterModule(bot.Module{
-		Name: "OBS",
+		Name: "obs",
 		Actions: map[string]bot.ActionFunc{
 			"SourceFilterEnabled": enableSourceFilterAction,
 			"ChangeScene":         changeSceneAction,
 			"StopStream":          stopStreamAction,
 		},
-		Init: func(c bot.ModuleConfig) error {
+		Init: func(c json.RawMessage) error {
+			if err := json.Unmarshal(c, &config); err != nil {
+				return err
+			}
 			// TODO: Get host:port from config and connect here
-			port, err := strconv.ParseInt(os.Getenv("OBS_PORT"), 10, 32)
+			port, err := strconv.ParseInt(config.Port, 10, 32)
 			if err != nil {
 				fmt.Printf("Failed to parse OBS_PORT: %s\n", err)
 			}
-			err = Connect(os.Getenv("OBS_HOST"), int(port))
+			err = Connect(config.Host, int(port))
 			if err != nil {
 				return err
 			}

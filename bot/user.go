@@ -5,13 +5,18 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/boltdb/bolt"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/nicklaw5/helix"
+	"go.etcd.io/bbolt"
 )
 
-// TODO: Use an LRU
-var users = map[string]*User{}
-var twitchUsers = map[string]helix.User{}
+func init() {
+	users, _ = lru.New(100)
+	twitchUsers, _ = lru.New(100)
+}
+
+var users *lru.Cache
+var twitchUsers *lru.Cache
 
 type User struct {
 	ID          string         `json:"id"`
@@ -65,7 +70,7 @@ func (u *User) TransferPoints(points uint64, userID string) error {
 	if err != nil {
 		return err
 	}
-	return db.Update(func(tx *bolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(USER_BUCKET)
 		if err := bucket.Put([]byte(u.ID), jsonUser1); err != nil {
 			return err
@@ -93,7 +98,7 @@ func updateUser(u *User) error {
 	if err != nil {
 		return err
 	}
-	return db.Update(func(tx *bolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(USER_BUCKET)
 		err := bucket.Put([]byte(u.ID), buf)
 		return err
@@ -103,11 +108,11 @@ func updateUser(u *User) error {
 func GetUser(id string) (*User, error) {
 	var u User
 
-	if u, ok := users[id]; ok {
-		return u, nil
+	if u, ok := users.Get(id); ok {
+		return u.(*User), nil
 	}
 
-	err := db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(USER_BUCKET)
 		v := b.Get([]byte(id))
 		if len(v) == 0 {
@@ -118,7 +123,7 @@ func GetUser(id string) (*User, error) {
 	})
 
 	if err == nil {
-		users[id] = &u
+		users.Add(id, &u)
 	}
 
 	return &u, err
@@ -127,8 +132,8 @@ func GetUser(id string) (*User, error) {
 func GetTwitchUserByName(name string) (helix.User, error) {
 	var u helix.User
 
-	if u, ok := twitchUsers[name]; ok {
-		return u, nil
+	if u, ok := twitchUsers.Get(name); ok {
+		return u.(helix.User), nil
 	}
 
 	resp, err := helixClient.GetUsers(&helix.UsersParams{
@@ -142,6 +147,6 @@ func GetTwitchUserByName(name string) (helix.User, error) {
 		return u, fmt.Errorf("User with name '%s' was not found.", name)
 	}
 
-	twitchUsers[name] = resp.Data.Users[0]
+	twitchUsers.Add(name, resp.Data.Users[0])
 	return resp.Data.Users[0], nil
 }

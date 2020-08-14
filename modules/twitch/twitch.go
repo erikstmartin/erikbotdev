@@ -11,16 +11,46 @@ import (
 	"github.com/gempir/go-twitch-irc/v2"
 )
 
+type Config struct {
+	Username     string   `json:"userName"`
+	ClientID     string   `json:"clientID"`
+	ClientSecret string   `json:"clientSecret"`
+	OauthToken   string   `json:"oauthToken"`
+	Channels     []string `json:"channels"`
+}
+
+func (c *Config) GetClientID() string {
+	if strings.HasPrefix(c.ClientID, "$") {
+		return os.Getenv(strings.TrimPrefix(c.ClientID, "$"))
+	}
+	return c.ClientID
+}
+
+func (c *Config) GetClientSecret() string {
+	if strings.HasPrefix(c.ClientSecret, "$") {
+		return os.Getenv(strings.TrimPrefix(c.ClientSecret, "$"))
+	}
+	return c.ClientSecret
+}
+
+func (c *Config) GetOauthToken() string {
+	if strings.HasPrefix(c.OauthToken, "$") {
+		return os.Getenv(strings.TrimPrefix(c.OauthToken, "$"))
+	}
+	return c.OauthToken
+}
+
 var client *twitch.Client
+var config Config
 
 func init() {
 	bot.RegisterModule(bot.Module{
-		Name: "Twitch",
+		Name: "twitch",
 		Actions: map[string]bot.ActionFunc{
 			"Say": sayAction,
 		},
-		Init: func(c bot.ModuleConfig) error {
-			return nil
+		Init: func(c json.RawMessage) error {
+			return json.Unmarshal(c, &config)
 		},
 	})
 }
@@ -38,7 +68,7 @@ func sayAction(a bot.Action, cmd bot.UserCommand) error {
 }
 
 func Run() error {
-	client = twitch.NewClient(os.Getenv("TWITCH_CHANNEL"), os.Getenv("TWITCH_OAUTH_TOKEN"))
+	client = twitch.NewClient(config.Username, config.GetOauthToken())
 
 	client.OnConnect(func() {
 		fmt.Println("Connected!")
@@ -86,19 +116,21 @@ func Run() error {
 			return
 		}
 
-		// TODO: Do we care what type of whitespace?
-		parts := strings.Split(message.Message[1:], " ")
-		cmdName := strings.ToLower(parts[0])
-		cmd := bot.UserCommand{
-			Channel:  message.Channel,
-			UserID:   message.User.ID,
-			UserName: message.User.DisplayName,
-			Command:  cmdName,
-			Args:     parts[1:],
-		}
-		err = bot.ExecuteCommand(cmd)
-		if err != nil {
-			fmt.Println("Error executing command: ", err)
+		if message.Channel == config.Username {
+			// TODO: Do we care what type of whitespace?
+			parts := strings.Split(message.Message[1:], " ")
+			cmdName := strings.ToLower(parts[0])
+			cmd := bot.UserCommand{
+				Channel:  message.Channel,
+				UserID:   message.User.ID,
+				UserName: message.User.DisplayName,
+				Command:  cmdName,
+				Args:     parts[1:],
+			}
+			err = bot.ExecuteCommand(cmd)
+			if err != nil {
+				fmt.Println("Error executing command: ", err)
+			}
 		}
 	})
 
@@ -131,8 +163,7 @@ func Run() error {
 		}
 	})
 
-	// TODO: Get this from config
-	client.Join(os.Getenv("TWITCH_CHANNEL"))
+	client.Join(config.Channels...)
 
 	return client.Connect()
 }
