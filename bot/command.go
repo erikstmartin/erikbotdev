@@ -23,7 +23,7 @@ var helixClient *helix.Client
 
 type Config struct {
 	Commands       map[string]*Command        `json:"commands"`
-	EnabledModules []string                   `json:"enabledModules`
+	EnabledModules []string                   `json:"enabledModules"`
 	DatabasePath   string                     `json:"databasePath"`
 	ModuleConfig   map[string]json.RawMessage `json:"moduleConfig"`
 }
@@ -35,6 +35,7 @@ func DatabasePath() string {
 
 	return "bot.db"
 }
+
 func IsModuleEnabled(m string) bool {
 	for _, mod := range config.EnabledModules {
 		if mod == m {
