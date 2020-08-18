@@ -22,6 +22,7 @@
            return
        }
 
+        
        if(audioPlayer !== null && audioPlayer !== undefined && audioPlayer.duration !== NaN && audioPlayer.currentTime < audioPlayer.duration){
            return
        }
@@ -34,7 +35,6 @@
         if(msg.type == "bot.PlaySoundMessage"){
             // TODO: We should be able to play any sound type
             playlist.push("/media/" + msg.message.sound + ".wav")
-            console.log(playlist);
         } else if(msg.type == "http.ChatMessage") {
             appendChat(msg.message);
         } else if(msg.type == 'http.RaidMessage') {
