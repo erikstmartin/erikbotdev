@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/nicklaw5/helix"
 )
 
-type ActionFunc func(Action, UserCommand) error
-type CommandFunc func(UserCommand) error
+type ActionFunc func(Action, Params) error
+type CommandFunc func(Params) error
 
 type ModuleInitFunc func(config json.RawMessage) error
 
@@ -23,6 +24,7 @@ var helixClient *helix.Client
 
 type Config struct {
 	Commands       map[string]*Command        `json:"commands"`
+	Triggers       map[string]Trigger         `json:"triggers"`
 	EnabledModules []string                   `json:"enabledModules"`
 	DatabasePath   string                     `json:"databasePath"`
 	ModuleConfig   map[string]json.RawMessage `json:"moduleConfig"`
@@ -65,18 +67,23 @@ type Command struct {
 	Actions     []Action `json:"actions"`
 }
 
-type UserCommand struct {
-	Channel  string
-	UserID   string
-	UserName string
-	Command  string
-	Args     []string
+type Params struct {
+	Channel     string
+	UserID      string
+	UserName    string
+	Command     string
+	CommandArgs []string
+	Payload     map[string]string
 }
 
 type Module struct {
 	Name    string
 	Actions map[string]ActionFunc
 	Init    ModuleInitFunc
+}
+
+type Trigger struct {
+	Actions []Action `json:"actions"`
 }
 
 func RegisterModule(m Module) error {
@@ -109,7 +116,7 @@ func registerAction(module string, name string, f ActionFunc) error {
 	return nil
 }
 
-func ExecuteAction(module string, name string, args map[string]string, cmd UserCommand) error {
+func ExecuteAction(module string, name string, args map[string]string, cmd Params) error {
 	action := fmt.Sprintf("%s::%s", module, name)
 	if f, ok := registeredActions[action]; ok {
 		return f(Action{Name: action, Args: args}, cmd)
@@ -117,7 +124,7 @@ func ExecuteAction(module string, name string, args map[string]string, cmd UserC
 	return nil
 }
 
-func ExecuteCommand(cmd UserCommand) error {
+func ExecuteCommand(cmd Params) error {
 	// First look in builtin commands
 	if c, ok := builtinCommands[cmd.Command]; ok {
 		return c(cmd)
@@ -133,8 +140,8 @@ func ExecuteCommand(cmd UserCommand) error {
 		for _, a := range c.Actions {
 			if f, ok := registeredActions[a.Name]; ok {
 				for i, argName := range a.UserArgMap {
-					if len(cmd.Args) >= i+1 {
-						a.Args[argName] = cmd.Args[i]
+					if len(cmd.CommandArgs) >= i+1 {
+						a.Args[argName] = cmd.CommandArgs[i]
 					}
 				}
 
@@ -153,6 +160,20 @@ func ExecuteCommand(cmd UserCommand) error {
 	}
 
 	return fmt.Errorf("Command not found %s", cmd.Command)
+}
+
+func ExecuteTrigger(name string, cmd Params) error {
+	if t, ok := config.Triggers[name]; ok {
+
+		for _, a := range t.Actions {
+			parts := strings.Split(a.Name, "::")
+			if len(parts) >= 2 {
+				ExecuteAction(parts[0], parts[1], a.Args, cmd)
+			}
+		}
+	}
+
+	return nil
 }
 
 func LoadConfig(r io.Reader) error {

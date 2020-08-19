@@ -151,7 +151,7 @@ func groupHue(groupName string, groupType string, hue uint16) error {
 	return g.Hue(hue)
 }
 
-func roomHueAction(a bot.Action, cmd bot.UserCommand) error {
+func roomHueAction(a bot.Action, cmd bot.Params) error {
 	if _, ok := a.Args["room"]; !ok {
 		return fmt.Errorf("Argument 'room' is required.")
 	}
@@ -168,7 +168,7 @@ func roomHueAction(a bot.Action, cmd bot.UserCommand) error {
 	return RoomHue(a.Args["room"], color)
 }
 
-func roomAlertAction(a bot.Action, cmd bot.UserCommand) error {
+func roomAlertAction(a bot.Action, cmd bot.Params) error {
 	if _, ok := a.Args["room"]; !ok {
 		return fmt.Errorf("Argument 'room' is required.")
 	}
@@ -225,7 +225,7 @@ func ListLights() ([]string, error) {
 	return lights, err
 }
 
-func roomBrightnessAction(a bot.Action, cmd bot.UserCommand) error {
+func roomBrightnessAction(a bot.Action, cmd bot.Params) error {
 	if _, ok := a.Args["brightness"]; !ok {
 		return fmt.Errorf("Argument 'brightness' is required.")
 	}
@@ -243,7 +243,7 @@ func roomBrightnessAction(a bot.Action, cmd bot.UserCommand) error {
 	return GroupBrightness(a.Args["room"], "Room", brightness)
 }
 
-func zoneBrightnessAction(a bot.Action, cmd bot.UserCommand) error {
+func zoneBrightnessAction(a bot.Action, cmd bot.Params) error {
 	if _, ok := a.Args["brightness"]; !ok {
 		return fmt.Errorf("Argument 'brightness' is required.")
 	}

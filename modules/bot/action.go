@@ -21,7 +21,7 @@ func init() {
 	})
 }
 
-func sleepAction(a bot.Action, cmd bot.UserCommand) error {
+func sleepAction(a bot.Action, cmd bot.Params) error {
 	var d string
 	var ok bool
 
@@ -42,7 +42,7 @@ type PlaySoundMessage struct {
 	Sound string `json:"sound"`
 }
 
-func playSoundAction(a bot.Action, cmd bot.UserCommand) error {
+func playSoundAction(a bot.Action, cmd bot.Params) error {
 	var s string
 	var ok bool
 	if s, ok = a.Args["sound"]; !ok {
@@ -56,7 +56,7 @@ func playSoundAction(a bot.Action, cmd bot.UserCommand) error {
 	return nil
 }
 
-func shellExecAction(a bot.Action, cmd bot.UserCommand) error {
+func shellExecAction(a bot.Action, cmd bot.Params) error {
 	var s string
 	var ok bool
 
@@ -66,7 +66,7 @@ func shellExecAction(a bot.Action, cmd bot.UserCommand) error {
 
 	var args = make([]string, 0)
 	if passArgs, ok := a.Args["passArgs"]; ok && strings.ToLower(passArgs) == "true" {
-		args = cmd.Args
+		args = cmd.CommandArgs
 	}
 
 	shellCmd := exec.Command(s, args...)

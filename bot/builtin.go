@@ -15,7 +15,7 @@ var builtinCommands map[string]CommandFunc = map[string]CommandFunc{
 	"sounds": soundListCmd,
 }
 
-func TwitchSay(cmd UserCommand, msg string) error {
+func TwitchSay(cmd Params, msg string) error {
 	args := map[string]string{
 		"channel": cmd.Channel,
 		"message": msg,
@@ -23,10 +23,10 @@ func TwitchSay(cmd UserCommand, msg string) error {
 	return ExecuteAction("twitch", "Say", args, cmd)
 }
 
-func helpCmd(cmd UserCommand) error {
+func helpCmd(cmd Params) error {
 	// TODO: If any arguments are supplied, return description
-	if len(cmd.Args) > 0 {
-		cname := cmd.Args[0]
+	if len(cmd.CommandArgs) > 0 {
+		cname := cmd.CommandArgs[0]
 		return TwitchSay(cmd, fmt.Sprintf("%s: %s", cname, config.Commands[cname].Description))
 	}
 
@@ -40,7 +40,7 @@ func helpCmd(cmd UserCommand) error {
 	return TwitchSay(cmd, strings.Join(cmds, ", "))
 }
 
-func userInfoCmd(cmd UserCommand) error {
+func userInfoCmd(cmd Params) error {
 	u, err := GetUser(cmd.UserID)
 	if err != nil {
 		return err
@@ -49,8 +49,8 @@ func userInfoCmd(cmd UserCommand) error {
 	return TwitchSay(cmd, fmt.Sprintf("%s: %d points", u.DisplayName, u.Points))
 }
 
-func givePointsCmd(cmd UserCommand) error {
-	if len(cmd.Args) != 2 {
+func givePointsCmd(cmd Params) error {
+	if len(cmd.CommandArgs) != 2 {
 		return nil
 	}
 
@@ -59,12 +59,12 @@ func givePointsCmd(cmd UserCommand) error {
 		return err
 	}
 
-	points, err := strconv.ParseUint(cmd.Args[1], 10, 64)
+	points, err := strconv.ParseUint(cmd.CommandArgs[1], 10, 64)
 	if err != nil {
 		return err
 	}
 
-	recipient := strings.TrimPrefix(cmd.Args[0], "@")
+	recipient := strings.TrimPrefix(cmd.CommandArgs[0], "@")
 	twitchUser, err := GetTwitchUserByName(recipient)
 	if err != nil {
 		return nil
@@ -84,7 +84,7 @@ func givePointsCmd(cmd UserCommand) error {
 	return nil
 }
 
-func soundListCmd(cmd UserCommand) error {
+func soundListCmd(cmd Params) error {
 	// TODO: This should really be a configurable directory with a default location ($HOME??)
 	files, err := ioutil.ReadDir("./media")
 	if err != nil {
