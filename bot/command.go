@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/nicklaw5/helix"
@@ -27,15 +28,36 @@ type Config struct {
 	Triggers       map[string]Trigger         `json:"triggers"`
 	EnabledModules []string                   `json:"enabledModules"`
 	DatabasePath   string                     `json:"databasePath"`
+	WebPath        string                     `json:"webPath"`
+	MediaPath      string                     `json:"mediaPath"`
 	ModuleConfig   map[string]json.RawMessage `json:"moduleConfig"`
 }
 
-func DatabasePath() string {
-	if config.DatabasePath != "" {
-		return config.DatabasePath
+func WebPath() string {
+	if config.WebPath == "" {
+		path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		return filepath.Join(path, "web")
 	}
 
-	return "bot.db"
+	return config.WebPath
+}
+
+func MediaPath() string {
+	if config.MediaPath == "" {
+		path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		return filepath.Join(path, "media")
+	}
+
+	return config.WebPath
+}
+
+func DatabasePath() string {
+	if config.DatabasePath == "" {
+		path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		return filepath.Join(path, "bot.db")
+	}
+
+	return config.DatabasePath
 }
 
 func IsModuleEnabled(m string) bool {

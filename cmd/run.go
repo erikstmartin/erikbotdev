@@ -19,7 +19,6 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		go http.Start(":8080", "./web")
 
-		// TODO: Start working on database
 		err := bot.InitDatabase(bot.DatabasePath(), 0600)
 		if err != nil {
 			if err.Error() == "timeout" {

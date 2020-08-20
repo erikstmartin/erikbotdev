@@ -24,7 +24,6 @@ func TwitchSay(cmd Params, msg string) error {
 }
 
 func helpCmd(cmd Params) error {
-	// TODO: If any arguments are supplied, return description
 	if len(cmd.CommandArgs) > 0 {
 		cname := cmd.CommandArgs[0]
 		return TwitchSay(cmd, fmt.Sprintf("%s: %s", cname, config.Commands[cname].Description))
@@ -85,8 +84,7 @@ func givePointsCmd(cmd Params) error {
 }
 
 func soundListCmd(cmd Params) error {
-	// TODO: This should really be a configurable directory with a default location ($HOME??)
-	files, err := ioutil.ReadDir("./media")
+	files, err := ioutil.ReadDir(MediaPath())
 	if err != nil {
 		return err
 	}
