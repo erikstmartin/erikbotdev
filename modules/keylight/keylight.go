@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,8 +35,8 @@ func init() {
 	bot.RegisterModule(bot.Module{
 		Name: "keylight",
 		Actions: map[string]bot.ActionFunc{
-			"Blink": blinkAction,
-			"Power": powerAction,
+			"Blink":    blinkAction,
+			"Settings": settingsAction,
 		},
 		Init: func(c json.RawMessage) error {
 			return json.Unmarshal(c, &config)
@@ -48,7 +50,6 @@ func blinkAction(a bot.Action, cmd bot.Params) error {
 	var err error
 
 	if _, ok := a.Args["count"]; ok {
-		// TODO: parse count
 		count, err = strconv.ParseInt(a.Args["count"], 10, 64)
 	}
 
@@ -61,12 +62,12 @@ func blinkAction(a bot.Action, cmd bot.Params) error {
 
 	for i := 0; int64(i) < count; i++ {
 		a.Args["on"] = "false"
-		powerAction(a, cmd)
+		settingsAction(a, cmd)
 
 		time.Sleep(duration)
 
 		a.Args["on"] = "true"
-		powerAction(a, cmd)
+		settingsAction(a, cmd)
 
 		time.Sleep(duration)
 	}
@@ -74,9 +75,24 @@ func blinkAction(a bot.Action, cmd bot.Params) error {
 	return nil
 }
 
-func powerAction(a bot.Action, cmd bot.Params) error {
-	if _, ok := a.Args["on"]; !ok {
-		return fmt.Errorf("Argument 'on' is required.")
+func settingsAction(a bot.Action, cmd bot.Params) error {
+	var brightness int
+	var temperature int
+
+	if b, ok := a.Args["brightness"]; ok {
+		bright, err := strconv.ParseInt(b, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Error parsing brightness: %s", err)
+		}
+		brightness = int(bright)
+	}
+
+	if t, ok := a.Args["temperature"]; ok {
+		temp, err := strconv.ParseInt(t, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Error parsing temp: %s", err)
+		}
+		temperature = convertToElgato(int(temp))
 	}
 
 	for _, addr := range config.Lights {
@@ -98,6 +114,14 @@ func powerAction(a bot.Action, cmd bot.Params) error {
 			if a.Args["on"] == "false" {
 				opt.Lights[i].On = 0
 			}
+
+			if _, ok := a.Args["brightness"]; ok {
+				opt.Lights[i].Brightness = brightness
+			}
+
+			if _, ok := a.Args["temperature"]; ok {
+				opt.Lights[i].Temperature = temperature
+			}
 		}
 
 		buf := bytes.NewBuffer([]byte{})
@@ -115,7 +139,16 @@ func powerAction(a bot.Action, cmd bot.Params) error {
 		}
 		defer resp.Body.Close()
 
-		// TODO: Read response body and check HTTP status code
+		if resp.StatusCode != 200 {
+			json, _ := ioutil.ReadAll(resp.Body)
+			return fmt.Errorf("Error setting light settings: %s", json)
+		}
+
 	}
 	return nil
+}
+
+func convertToElgato(kelvin int) int {
+	elgato := float64(kelvin-9900) / 20.35
+	return int(math.Abs(math.Trunc(elgato)))
 }
