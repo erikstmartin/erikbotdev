@@ -33,14 +33,21 @@ var runCmd = &cobra.Command{
 		go func() {
 			<-sig
 
+			bot.ExecuteTrigger("bot::Shutdown", bot.Params{
+				Command: "shutdown",
+			})
+
 			if bot.IsModuleEnabled("OBS") {
-				obs.EnableSourceFilter("Heil PR40", "Deep", false)
-				obs.EnableSourceFilter("Heil PR40", "HighPitch", false)
-				obs.EnableSourceFilter("Heil PR40", "False", false)
 				obs.Disconnect()
 			}
 			os.Exit(0)
 		}()
+
+		// TODO: Handle scenario where startup trigger contains a twitch action
+		bot.ExecuteTrigger("bot::Startup", bot.Params{
+			Command: "startup",
+		})
+
 		if err := twitch.Run(); err != nil {
 			panic(err)
 		}
