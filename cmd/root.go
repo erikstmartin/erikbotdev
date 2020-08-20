@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	_ "github.com/erikstmartin/erikbotdev/modules/keylight" // TODO: Remove this after we have cobra cmd
 	"github.com/spf13/cobra"
 )
 
