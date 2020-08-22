@@ -172,7 +172,6 @@ func roomAlertAction(a bot.Action, cmd bot.Params) error {
 	if _, ok := a.Args["room"]; !ok {
 		return fmt.Errorf("Argument 'room' is required.")
 	}
-	// TODO: ensure it's one of 'none', 'select', 'lselect'
 	if _, ok := a.Args["type"]; !ok {
 		return fmt.Errorf("Argument 'type' is required.")
 	}
@@ -189,6 +188,10 @@ func ZoneHue(zoneName string, hue uint16) error {
 }
 
 func groupAlert(groupName string, groupType string, alertType string) error {
+	if alertType != "none" && alertType != "select" && alertType != "lselect" {
+		return fmt.Errorf("alert type must be one of 'none', 'select', 'lselect'")
+	}
+
 	resp, err := bridge.GetGroupsContext(context.Background())
 	if err != nil {
 		return err
