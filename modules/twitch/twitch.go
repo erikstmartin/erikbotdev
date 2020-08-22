@@ -117,8 +117,7 @@ func Run() error {
 		}
 
 		if message.Channel == config.MainChannel {
-			// TODO: Do we care what type of whitespace?
-			parts := strings.Split(message.Message[1:], " ")
+			parts := strings.Fields(message.Message[1:])
 			cmdName := strings.ToLower(parts[0])
 			cmd := bot.Params{
 				Channel:     message.Channel,
