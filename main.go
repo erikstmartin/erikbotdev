@@ -3,15 +3,17 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/erikstmartin/erikbotdev/bot"
 	"github.com/erikstmartin/erikbotdev/cmd"
 	_ "github.com/erikstmartin/erikbotdev/modules/bot"
 )
 
+var configFileName = "erikbotdev.json"
+
 func main() {
-	// TODO: don't look in CWD. Look relative to home or bot executable, or /etc
-	file, err := os.Open("./config.json")
+	file, err := os.Open(findConfigFile())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -28,4 +30,22 @@ func main() {
 	}
 
 	cmd.Execute()
+}
+
+func findConfigFile() string {
+	home, err := os.UserHomeDir()
+	if err == nil {
+		path := filepath.Join(home, configFileName)
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	// Check relative to binary
+	path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	if _, err := os.Stat(filepath.Join(path, configFileName)); err == nil {
+		return filepath.Join(path, configFileName)
+	}
+
+	return filepath.Join(".", configFileName)
 }

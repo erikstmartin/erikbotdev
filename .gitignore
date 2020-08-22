@@ -2,7 +2,7 @@
 erikbotdev
 media/
 bot.db
-config.json
+erikbotdev.json
 
 # Binaries for programs and plugins
 *.exe
