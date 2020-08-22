@@ -1,0 +1,335 @@
+{
+  "enabledModules": ["hue", "obs", "bot", "twitch", "keylight"],
+  "databasePath": "./bot.db",
+  "webPath": "./web",
+  "mediaPath": "./media",
+  "moduleConfig":{
+    "keylight": {
+      "lights": [
+        "192.168.1.17:9123",
+        "192.168.1.242:9123"
+      ]
+    },
+    "obs": {
+      "host": "localhost",
+      "port": "4442"
+    },
+    "twitch": {
+      "mainChannel": "erikdotdev",
+      "clientID": "$TWITCH_CLIENT_ID",
+      "clientSecret": "$TWITCH_CLIENT_SECRET",
+      "oauthToken": "$TWITCH_OAUTH_TOKEN",
+      "channels": ["erikdotdev", "arschles", "beginbot"]
+    },
+    "hue": {
+      "bridge": "",
+      "user": "$HUE_USER"
+    }
+  },
+  "triggers": {
+    "bot::Startup":{
+    },
+    "bot::Shutdown":{
+      "actions": [
+        {
+          "name": "obs::SourceFilterEnabled",
+          "args": {
+            "enabled": "true",
+            "source": "Heil PR40",
+            "filterName": "deep"
+          }
+        },
+        {
+          "name": "obs::SourceFilterEnabled",
+          "args": {
+            "enabled": "true",
+            "source": "Heil PR40",
+            "filterName": "highpitch"
+          }
+        },
+        {
+          "name": "obs::SourceFilterEnabled",
+          "args": {
+            "enabled": "true",
+            "source": "Heil PR40",
+            "filterName": "robot"
+          }
+        }
+      ]
+    },
+    "twitch::Follow": {
+      "actions": [
+        {
+          "name": "hue::RoomAlam",
+          "args": {
+            "hue": "pink",
+            "room": "Office"
+          }
+        },
+        {
+          "name": "hue::RoomAlert",
+          "args": {
+            "room": "Office",
+            "type": "lselect"
+          }
+        },
+        {
+          "name": "bot::PlaySound",
+          "args": {
+            "sound": "follower"
+          }
+        }
+      ]
+    }
+  },
+  "commands": {
+    "uptime": {
+      "enabled": true,
+      "description": "Prints the uptime of streamer's system",
+      "actions": [
+        {
+          "name": "bot::ShellExec",
+          "args": {
+            "command": "uptime",
+            "output": "true",
+            "passArgs": "true"
+          }
+        }
+      ]
+    },
+    "project": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "Extensible Twitch bot written in Go"
+          }
+        }
+      ]
+    },
+    "book": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "Go in Action: https://www.manning.com/books/go-in-action"
+          }
+        }
+      ]
+    },
+    "os": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "Arch Linux, i3wm, neovim-nightly"
+          }
+        }
+      ]
+    },
+    "dotfiles": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "https://github.com/erikstmartin/dotfiles"
+          }
+        }
+      ]
+    },
+    "keyboard": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "Current: https://codekeyboards.com/, Future (ships in Oct): https://www.zsa.io/moonlander/"
+          }
+        }
+      ]
+    },
+    "sound": {
+      "enabled": true,
+      "offline": true,
+      "actions": [
+        {
+          "name": "bot::PlaySound",
+          "args": {
+          },
+          "userArgMap": [
+            "sound"
+          ]
+        }
+      ]
+    },
+    "scene": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "obs::ChangeScene",
+          "args": {
+            "scene": "Q & A"
+          }
+        }
+      ]
+    },
+    "kthnxbye": {
+      "name": "kthnxbye",
+      "enabled": false,
+      "actions": [
+        {
+          "name": "obs::StopStream"
+        }
+      ]
+    },
+    "brightness": {
+      "name": "brightness",
+      "enabled": true,
+      "offline": false,
+      "actions": [
+        {
+          "name": "hue::RoomBrightness",
+          "args": {
+            "room": "Office"
+          },
+          "userArgMap": [
+            "brightness"
+          ]
+        }
+      ]
+    },
+    "hue": {
+      "name": "hue",
+      "enabled": true,
+      "offline": true,
+      "description": "Change color or streamer's lights. Usage: !hue <color>. Color can be from 0-65000",
+      "actions": [
+        {
+          "name": "hue::RoomHue",
+          "args": {
+            "room": "Office"
+          },
+          "userArgMap": [
+            "hue"
+          ]
+        }
+      ]
+    },
+    "alarm": {
+      "name": "alarm",
+      "enabled": true,
+      "offline": true,
+      "actions": [
+        {
+          "name": "hue::RoomHue",
+          "args": {
+            "hue": "red",
+            "room": "Office"
+          },
+          "userArgMap": [
+            "hue"
+          ]
+        },
+        {
+          "name": "hue::RoomAlert",
+          "args": {
+            "room": "Office",
+            "type": "lselect"
+          },
+          "userArgMap": null
+        }
+      ]
+    },
+    "alert": {
+      "name": "alert",
+      "enabled": true,
+      "offline": true,
+      "points": 5000,
+      "actions": [
+        {
+          "name": "hue::RoomHue",
+          "args": {
+            "hue": "red",
+            "room": "Office"
+          },
+          "userArgMap": [
+            "hue"
+          ]
+        },
+        {
+          "name": "hue::RoomAlert",
+          "args": {
+            "room": "Office",
+            "type": "select"
+          },
+          "userArgMap": null
+        },
+        {
+          "name": "bot::Sleep",
+          "args": {
+            "duration": "1s"
+          },
+          "userArgMap": null
+        },
+        {
+          "name": "hue::RoomAlert",
+          "args": {
+            "room": "Office",
+            "type": "select"
+          },
+          "userArgMap": null
+        }
+      ]
+    },
+    "voice": {
+      "name": "voice",
+      "enabled": false,
+      "actions": [
+        {
+          "name": "obs::SourceFilterEnabled",
+          "args": {
+            "enabled": "true",
+            "source": "Heil PR40"
+          },
+          "userArgMap": [
+            "filterName"
+          ]
+        },
+        {
+          "name": "bot::Sleep",
+          "args": {
+            "duration": "5s"
+          },
+          "userArgMap": null
+        },
+        {
+          "name": "obs::SourceFilterEnabled",
+          "args": {
+            "enabled": "false",
+            "source": "Heil PR40"
+          },
+          "userArgMap": [
+            "filterName"
+          ]
+        }
+      ]
+    },
+    "strobe": {
+      "name": "strobe",
+      "enabled": true,
+      "actions": [
+        {
+          "name": "keylight::Blink",
+          "args": {
+            "count": "3",
+            "duration": "0.50s"
+          }
+        }
+      ]
+    }
+  }
+}
