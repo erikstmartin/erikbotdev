@@ -30,7 +30,6 @@ func init() {
 			if err := json.Unmarshal(c, &config); err != nil {
 				return err
 			}
-			// TODO: Get host:port from config and connect here
 			port, err := strconv.ParseInt(config.Port, 10, 32)
 			if err != nil {
 				fmt.Printf("Failed to parse OBS_PORT: %s\n", err)

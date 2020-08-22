@@ -57,8 +57,6 @@ func init() {
 	})
 }
 
-// TODO: Use WithTimeout on contexts
-// TODO: Get Hue bridge host and user from config, not environment variables
 func getBridge() (*huego.Bridge, error) {
 	if bridge != nil {
 		return bridge, nil

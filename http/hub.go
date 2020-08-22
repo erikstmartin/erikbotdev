@@ -4,12 +4,7 @@ import (
 	"reflect"
 )
 
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
+// Hub maintains the set of active clients and broadcasts messages to the clients.
 type Hub struct {
 	// Registered clients.
 	clients map[*Client]bool
@@ -34,8 +29,12 @@ func newHub() *Hub {
 }
 
 func (h *Hub) BroadcastMessage(msg Message) error {
-	// TODO: Check if pointer type. Don't call Elem if it's a Value
-	t := reflect.ValueOf(msg).Elem().Type()
+	t := reflect.TypeOf(msg)
+
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+
 	m := WebsocketMessage{
 		Type:    t.String(),
 		Message: msg,

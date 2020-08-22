@@ -48,7 +48,7 @@ func MediaPath() string {
 		return filepath.Join(path, "media")
 	}
 
-	return config.WebPath
+	return config.MediaPath
 }
 
 func DatabasePath() string {
@@ -204,7 +204,7 @@ func LoadConfig(r io.Reader) error {
 		return err
 	}
 
-	for key, _ := range config.Commands {
+	for key := range config.Commands {
 		cmd := config.Commands[key]
 		cmd.Name = key
 	}
@@ -214,7 +214,6 @@ func LoadConfig(r io.Reader) error {
 
 func Init() error {
 	for _, m := range modules {
-		// TODO: Pass in any config info from config.json
 		if IsModuleEnabled(m.Name) && m.Init != nil {
 			if err := m.Init(config.ModuleConfig[m.Name]); err != nil {
 				return err
@@ -230,7 +229,6 @@ func Init() error {
 		return err
 	}
 
-	// TODO: Better error handling to ensure valid token
 	token, err := helixClient.GetAppAccessToken()
 	if err != nil {
 		return err
