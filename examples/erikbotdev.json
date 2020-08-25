@@ -60,7 +60,7 @@
     "twitch::Follow": {
       "actions": [
         {
-          "name": "hue::RoomAlam",
+          "name": "hue::RoomAlarm",
           "args": {
             "hue": "pink",
             "room": "Office"

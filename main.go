@@ -10,7 +10,14 @@ import (
 	_ "github.com/erikstmartin/erikbotdev/modules/bot"
 )
 
-var configFileName = "erikbotdev.json"
+var configFileName string
+
+func init() {
+	configFileName = os.Getenv("ERIKBOTDEV_CONFIG_FILE_NAME")
+	if configFileName == "" {
+		configFileName = "erikbotdev.json"
+	}
+}
 
 func main() {
 	file, err := os.Open(findConfigFile())
