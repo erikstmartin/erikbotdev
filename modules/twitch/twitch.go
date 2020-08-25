@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/erikstmartin/erikbotdev/bot"
 	"github.com/erikstmartin/erikbotdev/http"
 	"github.com/gempir/go-twitch-irc/v2"
+	"github.com/nicklaw5/helix"
 )
 
 type Config struct {
@@ -47,12 +49,48 @@ func init() {
 	bot.RegisterModule(bot.Module{
 		Name: "twitch",
 		Actions: map[string]bot.ActionFunc{
-			"Say": sayAction,
+			"Say":    sayAction,
+			"Uptime": uptimeAction,
 		},
 		Init: func(c json.RawMessage) error {
 			return json.Unmarshal(c, &config)
 		},
 	})
+}
+
+func uptimeAction(a bot.Action, cmd bot.Params) error {
+	var channel = cmd.Channel
+
+	if _, ok := a.Args["channel"]; ok {
+		channel = a.Args["channel"]
+	}
+
+	streamResp, err := bot.GetHelixClient().GetStreams(&helix.StreamsParams{
+		UserLogins: []string{config.MainChannel},
+	})
+	if err != nil {
+		return err
+	}
+	streams := streamResp.Data.Streams
+	if len(streams) != 1 {
+		return fmt.Errorf(
+			"Expected 1 active stream for %s, got %d",
+			config.MainChannel,
+			len(streams),
+		)
+	}
+
+	startedAt := streams[0].StartedAt.Truncate(time.Minute)
+	uptime := time.Now().Truncate(time.Minute).Sub(startedAt)
+	client.Say(
+		channel,
+		fmt.Sprintf(
+			"I've been streaming for %d hours, %d minutes",
+			int(uptime.Hours()),
+			int(uptime.Minutes()),
+		),
+	)
+	return nil
 }
 
 func sayAction(a bot.Action, cmd bot.Params) error {
