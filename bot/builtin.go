@@ -9,10 +9,11 @@ import (
 )
 
 var builtinCommands map[string]CommandFunc = map[string]CommandFunc{
-	"help":   helpCmd,
-	"me":     userInfoCmd,
-	"props":  givePointsCmd,
-	"sounds": soundListCmd,
+	"help":     helpCmd,
+	"commands": helpCmd,
+	"me":       userInfoCmd,
+	"props":    givePointsCmd,
+	"sounds":   soundListCmd,
 }
 
 func TwitchSay(cmd Params, msg string) error {

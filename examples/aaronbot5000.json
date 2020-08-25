@@ -1,0 +1,132 @@
+{
+  "enabledModules": ["bot", "twitch"],
+  "databasePath": "./bot.db",
+  "webPath": "./web",
+  "mediaPath": "./media",
+  "moduleConfig":{
+    "keylight": {
+      "lights": [
+        "192.168.1.17:9123",
+        "192.168.1.242:9123"
+      ]
+    },
+    "obs": {
+      "host": "localhost",
+      "port": "4442"
+    },
+    "twitch": {
+      "mainChannel": "arschles",
+      "clientID": "$TWITCH_CLIENT_ID",
+      "clientSecret": "$TWITCH_CLIENT_SECRET",
+      "oauthToken": "$TWITCH_OAUTH_TOKEN",
+      "channels": ["erikdotdev", "arschles", "beginbot"]
+    },
+    "hue": {
+      "bridge": "",
+      "user": "$HUE_USER"
+    }
+  },
+  "triggers": {
+    "bot::Startup":{
+    },
+    "twitch::Follow": {
+      "actions": [
+        {
+          "name": "bot::PlaySound",
+          "args": {
+            "sound": "follower"
+          }
+        }
+      ]
+    }
+  },
+  "commands": {
+    "uptime": {
+      "enabled": true,
+      "description": "Prints the uptime of streamer's system",
+      "actions": [
+        {
+          "name": "twitch::Uptime"
+        }
+      ]
+    },
+    "project": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "Hacking on a Twitch bot, hat tip to erikdotdev for the code"
+          }
+        }
+      ]
+    },
+    "os": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "Windows 10 with WSL2 Running Debian"
+          }
+        }
+      ]
+    },
+    "dotfiles": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "https://github.com/arschles/dotfiles"
+          }
+        }
+      ]
+    },
+    "keyboard": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "twitch::Say",
+          "args": {
+            "message": "Current: https://www.daskeyboard.com/"
+          }
+        }
+      ]
+    },
+    "sound": {
+      "enabled": true,
+      "offline": true,
+      "actions": [
+        {
+          "name": "bot::PlaySound",
+          "args": {
+          },
+          "userArgMap": [
+            "sound"
+          ]
+        }
+      ]
+    },
+    "scene": {
+      "enabled": true,
+      "actions": [
+        {
+          "name": "obs::ChangeScene",
+          "args": {
+            "scene": "Q & A"
+          }
+        }
+      ]
+    },
+    "kthnxbye": {
+      "name": "kthnxbye",
+      "enabled": false,
+      "actions": [
+        {
+          "name": "obs::StopStream"
+        }
+      ]
+    }
+  }
+}

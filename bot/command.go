@@ -23,6 +23,11 @@ var config Config
 var Status status
 var helixClient *helix.Client
 
+// GetHelixClient returns a pointer to the helix client
+func GetHelixClient() *helix.Client {
+	return helixClient
+}
+
 type Config struct {
 	Commands       map[string]*Command        `json:"commands"`
 	Triggers       map[string]Trigger         `json:"triggers"`
@@ -154,6 +159,7 @@ func ExecuteCommand(cmd Params) error {
 
 	// Next check user created commands
 	if c, ok := config.Commands[cmd.Command]; ok && c.Enabled {
+
 		if !Status.Streaming && !c.Offline {
 			return nil
 		}

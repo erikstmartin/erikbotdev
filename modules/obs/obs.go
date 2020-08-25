@@ -3,6 +3,7 @@ package obs
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -56,6 +57,7 @@ func init() {
 				return err
 			}
 			bot.Status.Streaming = status.Streaming
+			log.Printf("OBS module enabled, streaming status set to %t", bot.Status.Streaming)
 
 			sceneReq := obsws.NewGetCurrentSceneRequest()
 			scene, err := sceneReq.SendReceive(client)
