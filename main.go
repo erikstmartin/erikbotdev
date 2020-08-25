@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -17,6 +18,7 @@ func init() {
 	if configFileName == "" {
 		configFileName = "erikbotdev.json"
 	}
+	log.Printf("Using config %s", configFileName)
 }
 
 func main() {
