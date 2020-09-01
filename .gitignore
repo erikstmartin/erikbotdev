@@ -4,6 +4,9 @@ media/
 bot.db
 erikbotdev.json
 
+# Bot config
+config.json
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

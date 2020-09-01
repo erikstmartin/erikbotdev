@@ -16,7 +16,7 @@ var configFileName string
 func init() {
 	configFileName = os.Getenv("ERIKBOTDEV_CONFIG_FILE_NAME")
 	if configFileName == "" {
-		configFileName = "erikbotdev.json"
+		configFileName = "config.json"
 	}
 	log.Printf("Using config %s", configFileName)
 }
