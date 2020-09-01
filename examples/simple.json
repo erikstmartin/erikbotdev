@@ -1,0 +1,29 @@
+{
+	"enabledModules": ["bot", "twitch"],
+	"databasePath": "./bot.db",
+	"webPath": "./web",
+	"mediaPath": "./media",
+	"moduleConfig": {
+		"twitch": {
+			"mainChannel": "YOUR_CHANNEL_HERE",
+			"clientID": "$TWITCH_CLIENT_ID",
+			"clientSecret": "$TWITCH_CLIENT_SECRET",
+			"oauthToken": "$TWITCH_OAUTH_TOKEN",
+			"channels": ["YOUR_CHANNEL_HERE"]
+		}
+	},
+	"triggers": {},
+	"commands": {
+		"hello": {
+			"enabled": true,
+			"actions": [
+				{
+					"name": "twitch::Say",
+					"args": {
+						"message": "Hello :)"
+					}
+				}
+			]
+		}
+	}
+}
