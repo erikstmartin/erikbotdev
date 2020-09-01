@@ -2,6 +2,16 @@
 
 TODO: Add description and usage here later.
 
+Modular support. Pick which modules you like.
+
+### Modules
+
+- Hue (lights)
+- Elgato (fill lights)
+- OBS (scenes)
+- Browser Source (use bot as a web endpoint to update a browser source)
+- Voice Effects (Through VST in OBS)
+
 ## Configuration
 
 Many of the commands in this bot interact with OBS through the [OBS websocket plugin](https://obsproject.com/forum/resources/obs-websocket-remote-control-obs-studio-from-websockets.466/). By default, this bot _requires_ that it can connect to the websocket in order to even run. If it can't it marks itself as offline and won't respond to any commands.
