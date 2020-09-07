@@ -219,9 +219,7 @@ func ExecuteCommand(cmd Params) error {
 		}
 
 		var i uint64
-		fmt.Println("repeat:", multiple)
 		for i = 0; i < multiple; i++ {
-			fmt.Println("loop")
 			for _, a := range c.Actions {
 				if f, ok := registeredActions[a.Name]; ok {
 					for i, argName := range a.UserArgMap {
