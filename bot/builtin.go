@@ -71,7 +71,7 @@ func givePointsCmd(cmd Params) error {
 	}
 
 	recipient := strings.TrimPrefix(cmd.CommandArgs[0], "@")
-	twitchUser, err := GetTwitchUserByName(recipient)
+	twitchUser, err := GetUserByName(recipient)
 	if err != nil {
 		return nil
 	}

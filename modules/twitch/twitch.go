@@ -142,12 +142,9 @@ func Run() error {
 		if u.New {
 			u.ID = message.User.ID
 			u.Points = 2500
-		}
-
-		err = u.Save()
-		if err != nil {
-			fmt.Println("Error saving user: ", err)
-			return
+			if err := u.Save(); err != nil {
+				return
+			}
 		}
 
 		if !strings.HasPrefix(message.Message, "!") && len(message.Message) >= 1 && !config.isIgnoredUser(u.DisplayName) {

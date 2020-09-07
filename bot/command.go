@@ -118,6 +118,11 @@ func (c Command) UserPermitted(cmd Params) bool {
 				return true
 			}
 		case "follower":
+			// Get our own user id
+			if u, err := GetUser(cmd.UserID); err == nil {
+				fmt.Println("user:", u.DisplayName, u.IsFollower)
+				return u.IsFollower
+			}
 		}
 	}
 	return false

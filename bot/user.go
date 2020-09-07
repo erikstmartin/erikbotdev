@@ -18,6 +18,9 @@ func init() {
 var users *lru.Cache
 var twitchUsers *lru.Cache
 
+var userID string
+var mainChannel string
+
 type User struct {
 	ID          string         `json:"id"`
 	DisplayName string         `json:"displayName"`
@@ -25,6 +28,7 @@ type User struct {
 	Badges      map[string]int `json:"badges"`
 	Points      uint64         `json:"points"`
 	New         bool           `json:"-"`
+	IsFollower  bool           `json:"isFollower"`
 	lock        sync.RWMutex
 }
 
@@ -96,6 +100,7 @@ func updateUser(u *User) error {
 	if err != nil {
 		return err
 	}
+
 	return db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket(USER_BUCKET)
 		err := bucket.Put([]byte(u.ID), buf)
@@ -114,9 +119,11 @@ func GetUser(id string) (*User, error) {
 		b := tx.Bucket(USER_BUCKET)
 		v := b.Get([]byte(id))
 		if len(v) == 0 {
+			u.ID = id
 			u.New = true
 			return nil
 		}
+
 		return json.Unmarshal(v, &u)
 	})
 
@@ -127,24 +134,120 @@ func GetUser(id string) (*User, error) {
 	return &u, err
 }
 
-func GetTwitchUserByName(name string) (helix.User, error) {
-	var u helix.User
-
+func GetUserByName(name string) (*User, error) {
 	if u, ok := twitchUsers.Get(name); ok {
-		return u.(helix.User), nil
+		return GetUser(u.(helix.User).ID)
 	}
 
 	resp, err := helixClient.GetUsers(&helix.UsersParams{
 		Logins: []string{name},
 	})
 	if err != nil {
-		return u, err
+		return nil, err
 	}
 
 	if len(resp.Data.Users) == 0 {
-		return u, fmt.Errorf("User with name '%s' was not found.", name)
+		return nil, fmt.Errorf("User with name '%s' was not found.", name)
 	}
 
 	twitchUsers.Add(name, resp.Data.Users[0])
-	return resp.Data.Users[0], nil
+	return GetUser(resp.Data.Users[0].ID)
+}
+
+func UpdateFollowers() error {
+	fmt.Println("Update of followers started.")
+	defer fmt.Println("Update of followers finished.")
+
+	err := db.Update(func(tx *bbolt.Tx) error {
+		if err := tx.DeleteBucket(FOLLOWER_BUCKET); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucket(FOLLOWER_BUCKET); err != nil {
+			return err
+		}
+		followers := tx.Bucket(FOLLOWER_BUCKET)
+
+		cursor := ""
+		for {
+			resp, err := helixClient.GetUsersFollows(&helix.UsersFollowsParams{After: cursor, First: 100, ToID: getUserID()})
+			if err != nil {
+				return err
+			}
+
+			for _, f := range resp.Data.Follows {
+				j, err := json.Marshal(f)
+				if err != nil {
+					return err
+				}
+
+				if err := followers.Put([]byte(f.FromID), j); err != nil {
+					return err
+				}
+			}
+
+			if len(resp.Data.Follows) < 100 {
+				break
+			}
+			cursor = resp.Data.Pagination.Cursor
+		}
+
+		return nil
+	})
+
+	err = db.Update(func(tx *bbolt.Tx) error {
+		users := tx.Bucket(USER_BUCKET)
+		followers := tx.Bucket(FOLLOWER_BUCKET)
+		users.ForEach(func(id, v []byte) error {
+			var u User
+			err := json.Unmarshal(v, &u)
+			if err != nil {
+				return nil
+			}
+
+			// Check Followers bucket to see if this id exists
+			u.IsFollower = len(followers.Get(id)) > 0
+			buf, err := json.Marshal(u)
+			if err != nil {
+				return err
+			}
+			return users.Put([]byte(u.ID), buf)
+		})
+		return nil
+	})
+
+	twitchUsers.Purge()
+	users.Purge()
+
+	return err
+}
+
+func getMainChannel() string {
+	if mainChannel != "" {
+		return mainChannel
+	}
+
+	type twitchConfig struct {
+		MainChannel string `json:"mainChannel"`
+	}
+
+	if c, ok := config.ModuleConfig["twitch"]; ok {
+		var tc twitchConfig
+		if err := json.Unmarshal(c, &tc); err == nil {
+			mainChannel = tc.MainChannel
+		}
+	}
+
+	return mainChannel
+}
+
+func getUserID() string {
+	if userID != "" {
+		return userID
+	}
+
+	if u, err := GetUserByName(getMainChannel()); err == nil {
+		userID = u.ID
+	}
+
+	return userID
 }

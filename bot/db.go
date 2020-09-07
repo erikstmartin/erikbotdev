@@ -10,6 +10,7 @@ import (
 
 var db *bbolt.DB
 var USER_BUCKET = []byte("Users")
+var FOLLOWER_BUCKET = []byte("Followers")
 var COUNTER_BUCKET = []byte("Counters")
 
 func IncrementCounter(counter string) (current uint64) {
@@ -78,10 +79,23 @@ func InitDatabase(file string, mode os.FileMode) error {
 		return err
 	}
 
+	_, err = tx.CreateBucketIfNotExists(FOLLOWER_BUCKET)
+	if err != nil {
+		return err
+	}
+
 	// Commit the transaction and check for error.
 	if err := tx.Commit(); err != nil {
 		return err
 	}
+
+	go func() {
+		UpdateFollowers()
+		t := time.NewTicker(5 * time.Minute)
+		for range t.C {
+			UpdateFollowers()
+		}
+	}()
 
 	return nil
 }

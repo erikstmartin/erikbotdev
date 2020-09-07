@@ -19,6 +19,7 @@ var sleepDuration = 200 * time.Millisecond
 
 var colorMap = map[string]uint16{
 	"orange": 3000,
+	"yellow": 7000,
 	"red":    65000,
 	"blue":   45000,
 	"green":  30000,
