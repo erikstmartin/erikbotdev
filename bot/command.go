@@ -91,6 +91,7 @@ type Command struct {
 	Enabled      bool     `json:"enabled"`
 	Offline      bool     `json:"offline"`
 	Points       uint64   `json:"points"`
+	Repeat       uint64   `json:"repeat"`
 	Actions      []Action `json:"actions"`
 	Restrictions []string `json:"restrictions"`
 }
@@ -212,16 +213,26 @@ func ExecuteCommand(cmd Params) error {
 		}
 
 		fmt.Println("Command executed", cmd.UserName, cmd.Command)
-		for _, a := range c.Actions {
-			if f, ok := registeredActions[a.Name]; ok {
-				for i, argName := range a.UserArgMap {
-					if len(cmd.CommandArgs) >= i+1 {
-						a.Args[argName] = cmd.CommandArgs[i]
-					}
-				}
+		multiple := c.Repeat
+		if multiple == 0 {
+			multiple = 1
+		}
 
-				if err := f(a, cmd); err != nil {
-					return err
+		var i uint64
+		fmt.Println("repeat:", multiple)
+		for i = 0; i < multiple; i++ {
+			fmt.Println("loop")
+			for _, a := range c.Actions {
+				if f, ok := registeredActions[a.Name]; ok {
+					for i, argName := range a.UserArgMap {
+						if len(cmd.CommandArgs) >= i+1 {
+							a.Args[argName] = cmd.CommandArgs[i]
+						}
+					}
+
+					if err := f(a, cmd); err != nil {
+						return err
+					}
 				}
 			}
 		}

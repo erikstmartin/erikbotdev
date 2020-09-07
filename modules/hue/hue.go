@@ -15,6 +15,7 @@ import (
 )
 
 var randColor *rand.Rand
+var sleepDuration = 200 * time.Millisecond
 
 var colorMap = map[string]uint16{
 	"orange": 3000,
@@ -155,7 +156,10 @@ func groupHue(groupName string, groupType string, hue uint16) error {
 	if err != nil {
 		return err
 	}
-	return g.Hue(hue)
+
+	err = g.Hue(hue)
+	time.Sleep(sleepDuration)
+	return err
 }
 
 func roomHueAction(a bot.Action, cmd bot.Params) error {
@@ -210,6 +214,15 @@ func zoneAlertAction(a bot.Action, cmd bot.Params) error {
 	if _, ok := a.Args["type"]; !ok {
 		return fmt.Errorf("Argument 'type' is required.")
 	}
+	if _, ok := a.Args["hue"]; ok {
+		color, err := ParseColor(a.Args["hue"])
+		if err != nil {
+			return err
+		}
+		if err := ZoneHue(a.Args["zone"], color); err != nil {
+			return err
+		}
+	}
 
 	return ZoneAlert(a.Args["zone"], a.Args["type"])
 }
@@ -234,7 +247,9 @@ func groupAlert(groupName string, groupType string, alertType string) error {
 
 	for _, g := range resp {
 		if g.Type == groupType && g.Name == groupName {
-			return g.Alert(alertType)
+			err := g.Alert(alertType)
+			time.Sleep(sleepDuration)
+			return err
 		}
 	}
 	return fmt.Errorf("Group not found: %s", groupName)
