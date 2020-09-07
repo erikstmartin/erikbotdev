@@ -14,6 +14,7 @@ var builtinCommands map[string]CommandFunc = map[string]CommandFunc{
 	"me":       userInfoCmd,
 	"props":    givePointsCmd,
 	"sounds":   soundListCmd,
+	"so":       shoutoutCmd,
 }
 
 func TwitchSay(cmd Params, msg string) error {
@@ -27,7 +28,11 @@ func TwitchSay(cmd Params, msg string) error {
 func helpCmd(cmd Params) error {
 	if len(cmd.CommandArgs) > 0 {
 		cname := cmd.CommandArgs[0]
-		return TwitchSay(cmd, fmt.Sprintf("%s: %s", cname, config.Commands[cname].Description))
+		if c, ok := config.Commands[cname]; ok {
+			return TwitchSay(cmd, fmt.Sprintf("%s: %s", cname, c.Description))
+		}
+
+		return nil
 	}
 
 	cmds := make([]string, 0)
@@ -99,4 +104,14 @@ func soundListCmd(cmd Params) error {
 	}
 
 	return TwitchSay(cmd, strings.Join(sounds, ", "))
+}
+
+// TODO; Hit Twitch API and ensure user exists
+func shoutoutCmd(cmd Params) error {
+	if len(cmd.CommandArgs) > 0 {
+		user := cmd.CommandArgs[0]
+		return TwitchSay(cmd, fmt.Sprintf("Shoutout %s! Check out their channel, shower them with follows and subs: https://twitch.tv/%s", user, user))
+	}
+
+	return fmt.Errorf("username is required")
 }

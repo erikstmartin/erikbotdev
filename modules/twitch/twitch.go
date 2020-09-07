@@ -115,7 +115,6 @@ func Run() error {
 	})
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
-		fmt.Println(message.Tags)
 		var u *bot.User
 		var err error
 
