@@ -19,6 +19,7 @@ type Config struct {
 	ClientSecret string   `json:"clientSecret"`
 	OauthToken   string   `json:"oauthToken"`
 	Channels     []string `json:"channels"`
+	IgnoredUsers []string `json:"ignoredUsers"`
 }
 
 func (c *Config) GetClientID() string {
@@ -40,6 +41,16 @@ func (c *Config) GetOauthToken() string {
 		return os.Getenv(strings.TrimPrefix(c.OauthToken, "$"))
 	}
 	return c.OauthToken
+}
+
+func (c *Config) isIgnoredUser(username string) bool {
+	for _, name := range c.IgnoredUsers {
+		if strings.ToLower(name) == strings.ToLower(username) {
+			return true
+		}
+	}
+
+	return false
 }
 
 var client *twitch.Client
@@ -139,7 +150,7 @@ func Run() error {
 			return
 		}
 
-		if !strings.HasPrefix(message.Message, "!") || len(message.Message) <= 1 {
+		if !strings.HasPrefix(message.Message, "!") && len(message.Message) >= 1 && !config.isIgnoredUser(u.DisplayName) {
 			u.GivePoints(1000)
 
 			if message.Channel == config.MainChannel {
