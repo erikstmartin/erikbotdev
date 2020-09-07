@@ -36,6 +36,22 @@ func IncrementCounter(counter string) (current uint64) {
 	return
 }
 
+func ListCounters() []string {
+	counters := make([]string, 0)
+
+	db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(COUNTER_BUCKET)
+
+		b.ForEach(func(k, v []byte) error {
+			counters = append(counters, string(k))
+			return nil
+		})
+		return nil
+	})
+
+	return counters
+}
+
 func InitDatabase(file string, mode os.FileMode) error {
 	var err error
 	db, err = bbolt.Open(file, mode, &bbolt.Options{Timeout: 1 * time.Second})

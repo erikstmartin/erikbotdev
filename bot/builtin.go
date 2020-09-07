@@ -15,6 +15,7 @@ var builtinCommands map[string]CommandFunc = map[string]CommandFunc{
 	"props":    givePointsCmd,
 	"sounds":   soundListCmd,
 	"so":       shoutoutCmd,
+	"counters": listCountersCmd,
 }
 
 func TwitchSay(cmd Params, msg string) error {
@@ -103,7 +104,11 @@ func soundListCmd(cmd Params) error {
 		}
 	}
 
-	return TwitchSay(cmd, strings.Join(sounds, ", "))
+	return TwitchSay(cmd, "sounds: "+strings.Join(sounds, ", "))
+}
+
+func listCountersCmd(cmd Params) error {
+	return TwitchSay(cmd, "counters: "+strings.Join(ListCounters(), ", "))
 }
 
 // TODO; Hit Twitch API and ensure user exists
