@@ -46,6 +46,8 @@ func init() {
 		Actions: map[string]bot.ActionFunc{
 			"RoomHue":        roomHueAction,
 			"RoomAlert":      roomAlertAction,
+			"ZoneHue":        zoneHueAction,
+			"ZoneAlert":      zoneAlertAction,
 			"ZoneBrightness": zoneBrightnessAction,
 			"RoomBrightness": roomBrightnessAction,
 		},
@@ -173,6 +175,23 @@ func roomHueAction(a bot.Action, cmd bot.Params) error {
 	return RoomHue(a.Args["room"], color)
 }
 
+func zoneHueAction(a bot.Action, cmd bot.Params) error {
+	if _, ok := a.Args["zone"]; !ok {
+		return fmt.Errorf("Argument 'zone' is required.")
+	}
+
+	if _, ok := a.Args["hue"]; !ok {
+		return fmt.Errorf("Argument 'hue' is required.")
+	}
+
+	color, err := ParseColor(a.Args["hue"])
+	if err != nil {
+		return err
+	}
+
+	return ZoneHue(a.Args["zone"], color)
+}
+
 func roomAlertAction(a bot.Action, cmd bot.Params) error {
 	if _, ok := a.Args["room"]; !ok {
 		return fmt.Errorf("Argument 'room' is required.")
@@ -182,6 +201,17 @@ func roomAlertAction(a bot.Action, cmd bot.Params) error {
 	}
 
 	return RoomAlert(a.Args["room"], a.Args["type"])
+}
+
+func zoneAlertAction(a bot.Action, cmd bot.Params) error {
+	if _, ok := a.Args["zone"]; !ok {
+		return fmt.Errorf("Argument 'zone' is required.")
+	}
+	if _, ok := a.Args["type"]; !ok {
+		return fmt.Errorf("Argument 'type' is required.")
+	}
+
+	return ZoneAlert(a.Args["zone"], a.Args["type"])
 }
 
 func RoomHue(roomName string, hue uint16) error {
