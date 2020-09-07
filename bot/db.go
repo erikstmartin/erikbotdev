@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"encoding/json"
 	"os"
 	"time"
 
@@ -9,6 +10,31 @@ import (
 
 var db *bbolt.DB
 var USER_BUCKET = []byte("Users")
+var COUNTER_BUCKET = []byte("Counters")
+
+func IncrementCounter(counter string) (current uint64) {
+	db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(COUNTER_BUCKET)
+		v := b.Get([]byte(counter))
+
+		if len(v) >= 1 {
+			if err := json.Unmarshal(v, &current); err != nil {
+				return err
+			}
+		}
+		current++
+
+		j, err := json.Marshal(current)
+		if err != nil {
+			return err
+		}
+		b.Put([]byte(counter), j)
+
+		return nil
+	})
+
+	return
+}
 
 func InitDatabase(file string, mode os.FileMode) error {
 	var err error
@@ -27,6 +53,11 @@ func InitDatabase(file string, mode os.FileMode) error {
 
 	// Use the transaction...
 	_, err = tx.CreateBucketIfNotExists(USER_BUCKET)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.CreateBucketIfNotExists(COUNTER_BUCKET)
 	if err != nil {
 		return err
 	}

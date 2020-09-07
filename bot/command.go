@@ -152,6 +152,14 @@ func ExecuteAction(module string, name string, args map[string]string, cmd Param
 }
 
 func ExecuteCommand(cmd Params) error {
+	// This is a very special case command
+	if strings.HasSuffix(cmd.Command, "++") {
+		counterName := strings.TrimRight(cmd.Command, "+")
+		current := IncrementCounter(counterName)
+
+		return TwitchSay(cmd, fmt.Sprintf("%s counter is now: %d", counterName, current))
+	}
+
 	// First look in builtin commands
 	if c, ok := builtinCommands[cmd.Command]; ok {
 		return c(cmd)

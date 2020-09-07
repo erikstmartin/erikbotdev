@@ -80,8 +80,6 @@ func (u *User) TransferPoints(points uint64, userID string) error {
 		}
 		return nil
 	})
-
-	return nil
 }
 
 func (u *User) Save() error {
