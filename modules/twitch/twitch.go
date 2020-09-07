@@ -141,7 +141,7 @@ func Run() error {
 
 		if u.New {
 			u.ID = message.User.ID
-			u.Points = 25000
+			u.Points = 2500
 		}
 
 		err = u.Save()
@@ -151,7 +151,7 @@ func Run() error {
 		}
 
 		if !strings.HasPrefix(message.Message, "!") && len(message.Message) >= 1 && !config.isIgnoredUser(u.DisplayName) {
-			u.GivePoints(1000)
+			u.GivePoints(10)
 
 			if message.Channel == config.MainChannel {
 				bot.ExecuteTrigger("twitch::Chat", bot.Params{
@@ -171,6 +171,7 @@ func Run() error {
 				Channel:     message.Channel,
 				UserID:      message.User.ID,
 				UserName:    message.User.DisplayName,
+				UserBadges:  message.User.Badges,
 				Command:     cmdName,
 				CommandArgs: parts[1:],
 			}

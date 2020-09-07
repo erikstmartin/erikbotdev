@@ -86,21 +86,57 @@ type Action struct {
 }
 
 type Command struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Enabled     bool     `json:"enabled"`
-	Offline     bool     `json:"offline"`
-	Points      uint64   `json:"points"`
-	Actions     []Action `json:"actions"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	Enabled      bool     `json:"enabled"`
+	Offline      bool     `json:"offline"`
+	Points       uint64   `json:"points"`
+	Actions      []Action `json:"actions"`
+	Restrictions []string `json:"restrictions"`
+}
+
+func (c Command) UserPermitted(cmd Params) bool {
+	if len(c.Restrictions) == 0 {
+		return true
+	}
+
+	// If you meet any of these conditions, you can run the command
+	// TODO: We may want a way to say if you meet all of these conditions
+	for _, cond := range c.Restrictions {
+		switch cond {
+		case "vip":
+			fallthrough
+		case "subscriber":
+			fallthrough
+		case "broadcaster":
+			fallthrough
+		case "premium":
+			fallthrough
+		case "founder":
+			if cmd.UserHasBadge(cond) {
+				return true
+			}
+		case "follower":
+		}
+	}
+	return false
 }
 
 type Params struct {
 	Channel     string
 	UserID      string
 	UserName    string
+	UserBadges  map[string]int
 	Command     string
 	CommandArgs []string
 	Payload     map[string]string
+}
+
+func (p Params) UserHasBadge(badge string) bool {
+	if _, ok := p.UserBadges[badge]; ok {
+		return true
+	}
+	return false
 }
 
 type Module struct {
@@ -167,8 +203,11 @@ func ExecuteCommand(cmd Params) error {
 
 	// Next check user created commands
 	if c, ok := config.Commands[cmd.Command]; ok && c.Enabled {
-
 		if !Status.Streaming && !c.Offline {
+			return nil
+		}
+
+		if !c.UserPermitted(cmd) {
 			return nil
 		}
 
