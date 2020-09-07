@@ -4,13 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/amimof/huego"
 	"github.com/erikstmartin/erikbotdev/bot"
 )
+
+var randColor *rand.Rand
 
 var colorMap = map[string]uint16{
 	"orange": 3000,
@@ -46,6 +50,9 @@ func init() {
 			"RoomBrightness": roomBrightnessAction,
 		},
 		Init: func(c json.RawMessage) error {
+			s := rand.NewSource(time.Now().UnixNano())
+			randColor = rand.New(s)
+
 			err := json.Unmarshal(c, &config)
 			if err != nil {
 				return err
@@ -281,6 +288,10 @@ func ZoneBrightness(groupName string, b uint8) error {
 }
 
 func ParseColor(color string) (uint16, error) {
+	if color == "rand" || color == "random" {
+		return uint16(randColor.Intn(65000)), nil
+	}
+
 	var (
 		colorCode uint16
 		ok        bool
