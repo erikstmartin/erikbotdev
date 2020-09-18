@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -153,6 +154,11 @@ func getGroup(groupName string, groupType string) (huego.Group, error) {
 }
 
 func groupHue(groupName string, groupType string, hue uint16) error {
+	var groupRegex = regexp.MustCompile("^[a-zA-Z0-9]+$")
+	if !groupRegex.Match([]byte(groupName)) {
+		return fmt.Errorf("Invalid Group Name")
+	}
+
 	g, err := getGroup(groupName, groupType)
 	if err != nil {
 		return err
